@@ -1,0 +1,22 @@
+[project]
+name = "chainregistry"
+description = "Decentralized username registry on Stacks"
+authors = ["winsznx"]
+telemetry = false
+cache_dir = ".cache"
+requirements = []
+boot_contracts = []
+
+[contracts.chain-registry]
+path = "contracts/chain-registry.clar"
+clarity_version = 2
+epoch = 2.4
+
+[repl.analysis]
+passes = ["check_checker"]
+
+[repl.analysis.check_checker]
+strict = false
+trusted_sender = false
+trusted_caller = false
+callee_filter = false
