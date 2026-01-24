@@ -1,0 +1,25 @@
+{
+    "name": "chainregistry",
+    "version": "1.0.0",
+    "private": true,
+    "description": "Decentralized domain/username registry with ownership transfer on Base and Stacks",
+    "scripts": {
+        "dev": "pnpm --filter web dev",
+        "build": "pnpm --filter web build",
+        "test": "pnpm --filter base-contracts test && pnpm --filter stacks-contracts test",
+        "lint": "pnpm --filter web lint"
+    },
+    "keywords": [
+        "blockchain",
+        "base",
+        "stacks",
+        "registry",
+        "web3"
+    ],
+    "author": "winsznx",
+    "license": "MIT",
+    "engines": {
+        "node": ">=18.0.0",
+        "pnpm": ">=8.0.0"
+    }
+}
