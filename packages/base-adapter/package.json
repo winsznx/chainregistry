@@ -1,0 +1,12 @@
+{
+    "name": "@chainregistry/base-adapter",
+    "version": "1.0.0",
+    "private": true,
+    "main": "./src/index.ts",
+    "types": "./src/index.ts",
+    "dependencies": {
+        "@reown/appkit": "^1.0.0",
+        "@reown/appkit-adapter-ethers": "^1.0.0",
+        "ethers": "^6.13.0"
+    }
+}
