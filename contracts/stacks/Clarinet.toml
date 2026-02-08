@@ -7,8 +7,8 @@ cache_dir = ".cache"
 requirements = []
 boot_contracts = []
 
-[contracts.chain-registry]
-path = "contracts/chain-registry.clar"
+[contracts.LUchainregistry]
+path = "contracts/LUchainregistry.clar"
 clarity_version = 2
 epoch = 2.4
 
