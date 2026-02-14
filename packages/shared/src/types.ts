@@ -1,22 +1,20 @@
-export type Chain = 'base' | 'stacks';
 
-export type TransactionStatus = 'idle' | 'pending' | 'success' | 'error';
-
-export interface WalletState {
-    address: string | null;
-    network: string | null;
-    balance: string | null;
-    isConnected: boolean;
+export interface ContractConfig {
+    address: string;
+    network: 'mainnet' | 'testnet';
+    version: number;
 }
 
-export interface TransactionState {
-    status: TransactionStatus;
-    hash: string | null;
-    error: string | null;
+export interface UserProfile {
+    address: string;
+    balance: string;
+    nonce: number;
 }
 
-export interface Registration {
-    name: string;
-    owner: string;
-    registeredAt: number;
+export type TransactionStatus = 'pending' | 'success' | 'failed';
+
+export interface ApiResponse<T> {
+    data?: T;
+    error?: string;
+    timestamp: number;
 }
