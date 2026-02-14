@@ -1,75 +1,37 @@
-import { ethers } from 'ethers';
-import { CONTRACT_ADDRESSES } from './config';
 
-const ABI = [
-    'function registerName(string calldata name) external',
-    'function transferName(string calldata name, address newOwner) external',
-    'function releaseName(string calldata name) external',
-    'function isNameAvailable(string calldata name) external view returns (bool)',
-    'function getNameOwner(string calldata name) external view returns (address)',
-    'function getRegistration(string calldata name) external view returns (address owner, uint256 registeredAt)',
-    'function getOwnerNames(address owner) external view returns (string[] memory)',
-    'event NameRegistered(string indexed name, address indexed owner, uint256 timestamp)',
-    'event NameTransferred(string indexed name, address indexed from, address indexed to)',
-    'event NameReleased(string indexed name, address indexed owner)'
-];
+import { createPublicClient, http, ContractFunctionExecutionError } from 'viem';
+import { mainnet } from 'viem/chains';
 
-export class ChainRegistryContract {
-    private contract: ethers.Contract | null = null;
-    private provider: any;
+export class BaseContractAdapter {
+    private client;
+    private address: `0x${string}`;
 
-    constructor(provider: any, chainId: number) {
-        this.provider = provider;
-        const contractAddress = CONTRACT_ADDRESSES[chainId];
+    constructor(address: `0x${string}`) {
+        this.address = address;
+        this.client = createPublicClient({
+            chain: mainnet,
+            transport: http()
+        });
+    }
 
-        if (contractAddress && contractAddress !== '0x0000000000000000000000000000000000000000') {
-            const signer = provider.getSigner();
-            this.contract = new ethers.Contract(contractAddress, ABI, signer);
+    async retryCall<T>(fn: () => Promise<T>, retries = 3): Promise<T> {
+        try {
+            return await fn();
+        } catch (error) {
+            if (retries > 0 && error instanceof ContractFunctionExecutionError) {
+                await new Promise(r => setTimeout(r, 1000));
+                return this.retryCall(fn, retries - 1);
+            }
+            throw error;
         }
     }
 
-    async registerName(name: string): Promise<string> {
-        if (!this.contract) throw new Error('Contract not initialized');
-
-        const tx = await this.contract.registerName(name);
-        await tx.wait();
-        return tx.hash;
-    }
-
-    async transferName(name: string, newOwner: string): Promise<string> {
-        if (!this.contract) throw new Error('Contract not initialized');
-
-        const tx = await this.contract.transferName(name, newOwner);
-        await tx.wait();
-        return tx.hash;
-    }
-
-    async releaseName(name: string): Promise<string> {
-        if (!this.contract) throw new Error('Contract not initialized');
-
-        const tx = await this.contract.releaseName(name);
-        await tx.wait();
-        return tx.hash;
-    }
-
-    async isNameAvailable(name: string): Promise<boolean> {
-        if (!this.contract) throw new Error('Contract not initialized');
-        return await this.contract.isNameAvailable(name);
-    }
-
-    async getNameOwner(name: string): Promise<string> {
-        if (!this.contract) throw new Error('Contract not initialized');
-        return await this.contract.getNameOwner(name);
-    }
-
-    async getRegistration(name: string): Promise<{ owner: string; registeredAt: number }> {
-        if (!this.contract) throw new Error('Contract not initialized');
-        const [owner, registeredAt] = await this.contract.getRegistration(name);
-        return { owner, registeredAt: Number(registeredAt) };
-    }
-
-    async getOwnerNames(owner: string): Promise<string[]> {
-        if (!this.contract) throw new Error('Contract not initialized');
-        return await this.contract.getOwnerNames(owner);
+    async readState(functionName: string, args: any[] = []) {
+        return this.retryCall(() => this.client.readContract({
+            address: this.address,
+            abi: [], // TODO: Import ABI
+            functionName,
+            args
+        }));
     }
 }
