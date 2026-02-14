@@ -1,129 +1,34 @@
-import {
-    makeContractCall,
-    broadcastTransaction,
-    AnchorMode,
-    PostConditionMode,
-    stringAsciiCV,
-    principalCV,
-    callReadOnlyFunction,
-    cvToValue
-} from '@stacks/transactions';
-import { stacksConfig, CONTRACT_ADDRESS, CONTRACT_NAME } from './config';
 
-export class ChainRegistryContract {
-    private userSession: any;
+import { StacksMainnet } from '@stacks/network';
+import { callReadOnlyFunction, cvToJSON, standardPrincipalCV } from '@stacks/transactions';
 
-    constructor(userSession: any) {
-        this.userSession = userSession;
+export class StacksAdapter {
+    private network;
+    private contractAddress: string;
+    private contractName: string;
+
+    constructor(address: string, name: string) {
+        this.network = new StacksMainnet();
+        this.contractAddress = address;
+        this.contractName = name;
     }
 
-    async registerName(name: string): Promise<string> {
-        const userData = this.userSession.loadUserData();
-
-        const txOptions = {
-            contractAddress: CONTRACT_ADDRESS,
-            contractName: CONTRACT_NAME,
-            functionName: 'register-name',
-            functionArgs: [stringAsciiCV(name)],
-            senderKey: userData.appPrivateKey,
-            network: stacksConfig.network,
-            anchorMode: AnchorMode.Any,
-            postConditionMode: PostConditionMode.Allow
-        };
-
-        const transaction = await makeContractCall(txOptions);
-        const broadcastResponse = await broadcastTransaction(transaction, stacksConfig.network);
-
-        return broadcastResponse.txid;
-    }
-
-    async transferName(name: string, newOwner: string): Promise<string> {
-        const userData = this.userSession.loadUserData();
-
-        const txOptions = {
-            contractAddress: CONTRACT_ADDRESS,
-            contractName: CONTRACT_NAME,
-            functionName: 'transfer-name',
-            functionArgs: [stringAsciiCV(name), principalCV(newOwner)],
-            senderKey: userData.appPrivateKey,
-            network: stacksConfig.network,
-            anchorMode: AnchorMode.Any,
-            postConditionMode: PostConditionMode.Allow
-        };
-
-        const transaction = await makeContractCall(txOptions);
-        const broadcastResponse = await broadcastTransaction(transaction, stacksConfig.network);
-
-        return broadcastResponse.txid;
-    }
-
-    async releaseName(name: string): Promise<string> {
-        const userData = this.userSession.loadUserData();
-
-        const txOptions = {
-            contractAddress: CONTRACT_ADDRESS,
-            contractName: CONTRACT_NAME,
-            functionName: 'release-name',
-            functionArgs: [stringAsciiCV(name)],
-            senderKey: userData.appPrivateKey,
-            network: stacksConfig.network,
-            anchorMode: AnchorMode.Any,
-            postConditionMode: PostConditionMode.Allow
-        };
-
-        const transaction = await makeContractCall(txOptions);
-        const broadcastResponse = await broadcastTransaction(transaction, stacksConfig.network);
-
-        return broadcastResponse.txid;
-    }
-
-    async isNameAvailable(name: string): Promise<boolean> {
+    async callReadOnly(functionName: string, args: any[] = []) {
         const options = {
-            contractAddress: CONTRACT_ADDRESS,
-            contractName: CONTRACT_NAME,
-            functionName: 'is-name-available',
-            functionArgs: [stringAsciiCV(name)],
-            network: stacksConfig.network,
-            senderAddress: CONTRACT_ADDRESS
+            contractAddress: this.contractAddress,
+            contractName: this.contractName,
+            functionName,
+            functionArgs: args,
+            network: this.network,
+            senderAddress: this.contractAddress,
         };
 
-        const result = await callReadOnlyFunction(options);
-        return cvToValue(result);
-    }
-
-    async getNameOwner(name: string): Promise<string | null> {
-        const options = {
-            contractAddress: CONTRACT_ADDRESS,
-            contractName: CONTRACT_NAME,
-            functionName: 'get-name-owner',
-            functionArgs: [stringAsciiCV(name)],
-            network: stacksConfig.network,
-            senderAddress: CONTRACT_ADDRESS
-        };
-
-        const result = await callReadOnlyFunction(options);
-        const value = cvToValue(result);
-        return value || null;
-    }
-
-    async getRegistration(name: string): Promise<{ owner: string; registeredAt: number } | null> {
-        const options = {
-            contractAddress: CONTRACT_ADDRESS,
-            contractName: CONTRACT_NAME,
-            functionName: 'get-registration',
-            functionArgs: [stringAsciiCV(name)],
-            network: stacksConfig.network,
-            senderAddress: CONTRACT_ADDRESS
-        };
-
-        const result = await callReadOnlyFunction(options);
-        const value = cvToValue(result);
-
-        if (!value) return null;
-
-        return {
-            owner: value.owner,
-            registeredAt: Number(value['registered-at'])
-        };
+        try {
+            const result = await callReadOnlyFunction(options);
+            return cvToJSON(result);
+        } catch (e) {
+            console.error(f"Error calling {functionName}:", e);
+            throw new Error(`Failed to call ${functionName}: ${e}`);
+        }
     }
 }
