@@ -1,20 +1,26 @@
+
 import type { Metadata } from 'next';
+import { Inter } from 'next/font/google';
 import './globals.css';
 
+const inter = Inter({ subsets: ['latin'] });
+
 export const metadata: Metadata = {
-    title: 'ChainRegistry - Decentralized Username Registry',
-    description: 'Register and manage unique usernames on Base and Stacks blockchains',
-    keywords: ['blockchain', 'registry', 'username', 'base', 'stacks', 'web3'],
+  title: 'Chainregistry | Decentralized App',
+  description: 'Secure and transparent blockchain application powered by chainregistry',
+  icons: {
+    icon: '/favicon.ico',
+  },
 };
 
 export default function RootLayout({
-    children,
+  children,
 }: {
-    children: React.ReactNode;
+  children: React.ReactNode;
 }) {
-    return (
-        <html lang="en">
-            <body>{children}</body>
-        </html>
-    );
+  return (
+    <html lang="en" className="antialiased">
+      <body className={inter.className}>{children}</body>
+    </html>
+  );
 }
